@@ -9,21 +9,20 @@ protected:
     string val;
 public:
     Node* left;
-
     Node* right;
-    Node(string vall) : val(vall), left(nullptr), right(nullptr) {}
 
-    virtual void printVal() {
-        cout << val << endl;
-    }
+    //constructor to initialise the expression tree node
+    Node(string val) : val(val), left(nullptr), right(nullptr) {}
+    //pure virtual function to be defined by the child classes : operator nodes and operand nodes
     virtual int evaluate() = 0;
 };
 
-// OperatorNode handles operators like +, -, *, /
 class OperatorNode : public Node {
 public:
-    OperatorNode(string vall) : Node(vall) {}
+    //constructor to initialise the expression tree Operator node
+    OperatorNode(string val) : Node(val) {}
 
+    //overridden function to recursively evaluate the expression tree
     int evaluate() override {
         int leftValue = left->evaluate();   // Recursively evaluate the left subtree
         int rightValue = right->evaluate(); // Recursively evaluate the right subtree
@@ -46,11 +45,12 @@ public:
     }
 };
 
-// OperandNode handles operands (numbers)
 class OperandNode : public Node {
 public:
-    OperandNode(string vall) : Node(vall) {}
+    //constructor to initialise the expression tree Operand nodes
+    OperandNode(string val) : Node(val) {}
 
+    //overridden function to evaluate the operand nodes: just returning the integer equivalants
     int evaluate() override {
         return stoi(val);
     }
@@ -73,17 +73,15 @@ int getPrecedence(char op) {
 // Function to create the expression tree from an infix expression
 Node* createExpTree(const string& exp) {
     stack<char> operatorSt;     // To hold operators
-    stack<Node*> operandSt;     // To hold operands (leaf nodes)
+    stack<Node*> operandSt;     // To hold expression tree nodes
 
     unsigned int size = (unsigned int)exp.size();
     for (unsigned int i = 0; i < size; ++i) {
-        if (isspace(exp[i])) {
+        if (isspace(exp[i])) { //continue if current char is a space
             continue;
         }
         
-
-        // Parse operands (numbers)
-        if (isdigit(exp[i])) {
+        if (isdigit(exp[i])) { //case when there is an operand: get the whole operand, create OperandNode and push it on the operand stack
             string operand = "";
             while (i < exp.size() && isdigit(exp[i])) {
                 operand += exp[i];
@@ -94,13 +92,13 @@ Node* createExpTree(const string& exp) {
             continue;
         }
 
-        // Handle opening parenthesis
+        // case when there is an opening paranthesis: push it on the operator stack
         if (exp[i] == '(') {
             operatorSt.push(exp[i]);
             continue;
         }
 
-        // Handle closing parenthesis
+        // case when there is a closing paranthesis: get all the operators until opening parenthesis found, make the expression subtrees, push onto the operantStack
         if (exp[i] == ')') {
             while (!operatorSt.empty() && operatorSt.top() != '(') {
                 Node* right = operandSt.top(); operandSt.pop();
@@ -118,8 +116,7 @@ Node* createExpTree(const string& exp) {
 
         // Handle operators (+, -, *, /)
         if (exp[i] == '+' || exp[i] == '-' || exp[i] == '*' || exp[i] == '/') {
-            while (!operatorSt.empty() && getPrecedence(exp[i]) <= getPrecedence(operatorSt.top())) {
-                // Pop two operands and one operator to create a new subtree
+            while (!operatorSt.empty() && getPrecedence(exp[i]) <= getPrecedence(operatorSt.top())) { //case when higher/equal precedence op is on top of stack
                 Node* right = operandSt.top(); operandSt.pop();
                 Node* left = operandSt.top(); operandSt.pop();
                 char op = operatorSt.top(); operatorSt.pop();
@@ -133,7 +130,7 @@ Node* createExpTree(const string& exp) {
         }
     }
 
-    while (!operatorSt.empty()) {
+    while (!operatorSt.empty()) { //to handle the remaining operators in the op stack
         Node* right = operandSt.top(); operandSt.pop();
         Node* left = operandSt.top(); operandSt.pop();
         char op = operatorSt.top(); operatorSt.pop();
@@ -151,14 +148,7 @@ int main() {
     string exp;
     cout << "ENTER INPUT: ";
     getline(cin, exp);
-
-    try {
-        Node* root = createExpTree(exp);
-        cout << "The result of the expression is: " << root->evaluate() << endl;
-    }
-    catch (const exception& e) {
-        cout << "Error: " << e.what() << endl;
-    }
-
+    Node* root = createExpTree(exp);
+    cout << "The result of the expression is: " << root->evaluate() << endl;
     return 0;
 }
