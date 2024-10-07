@@ -4,61 +4,76 @@
 #include <stdexcept>
 using namespace std;
 
-class Node {
+class Node
+{
 protected:
     string val;
-public:
-    Node* left;
-    Node* right;
 
-    //constructor to initialise the expression tree node
+public:
+    Node *left;
+    Node *right;
+
+    // constructor to initialise the expression tree node
     Node(string val) : val(val), left(nullptr), right(nullptr) {}
-    //pure virtual function to be defined by the child classes : operator nodes and operand nodes
+    // pure virtual function to be defined by the child classes : operator nodes and operand nodes
     virtual int evaluate() = 0;
 };
 
-class OperatorNode : public Node {
+class OperatorNode : public Node
+{
 public:
-    //constructor to initialise the expression tree Operator node
+    // constructor to initialise the expression tree Operator node
     OperatorNode(string val) : Node(val) {}
 
-    //overridden function to recursively evaluate the expression tree
-    int evaluate() override {
+    // overridden function to recursively evaluate the expression tree
+    int evaluate() override
+    {
         int leftValue = left->evaluate();   // Recursively evaluate the left subtree
         int rightValue = right->evaluate(); // Recursively evaluate the right subtree
-        if (val == "+") {
-            return leftValue + rightValue;
+        try
+        {
+            if (val == "+")
+            {
+                return leftValue + rightValue;
+            }
+            else if (val == "-")
+            {
+                return leftValue - rightValue;
+            }
+            else if (val == "*")
+            {
+                return leftValue * rightValue;
+            }
+            else if (val == "/")
+            {
+                return leftValue / rightValue;
+            }
         }
-        else if (val == "-") {
-            return leftValue - rightValue;
-        }
-        else if (val == "*") {
-            return leftValue * rightValue;
-        }
-        else if (val == "/") {
-            if (rightValue == 0) throw runtime_error("Division by zero error.");
-            return leftValue / rightValue;
-        }
-        else {
-            throw runtime_error("Unknown operator");
+        catch (exception e)
+        {
+            cout << e.what() << endl;
         }
     }
 };
 
-class OperandNode : public Node {
+class OperandNode : public Node
+{
 public:
-    //constructor to initialise the expression tree Operand nodes
+    // constructor to initialise the expression tree Operand nodes
     OperandNode(string val) : Node(val) {}
 
-    //overridden function to evaluate the operand nodes: just returning the integer equivalants
-    int evaluate() override {
+    // overridden function to evaluate the operand nodes: just returning the integer equivalants
+    int evaluate() override
+    {
         return stoi(val);
     }
 };
 
 // Utility function to get operator precedence
-int getPrecedence(char op) {
-    switch (op) {
+int getPrecedence(char op)
+{
+    switch (op)
+    {
     case '+':
     case '-':
         return 1;
@@ -71,19 +86,24 @@ int getPrecedence(char op) {
 }
 
 // Function to create the expression tree from an infix expression
-Node* createExpTree(const string& exp) {
-    stack<char> operatorSt;     // To hold operators
-    stack<Node*> operandSt;     // To hold expression tree nodes
+Node *createExpTree(const string &exp)
+{
+    stack<char> operatorSt;  // To hold operators
+    stack<Node *> operandSt; // To hold expression tree nodes
 
     unsigned int size = (unsigned int)exp.size();
-    for (unsigned int i = 0; i < size; ++i) {
-        if (isspace(exp[i])) { //continue if current char is a space
+    for (unsigned int i = 0; i < size; ++i)
+    {
+        if (isspace(exp[i]))
+        { // continue if current char is a space
             continue;
         }
-        
-        if (isdigit(exp[i])) { //case when there is an operand: get the whole operand, create OperandNode and push it on the operand stack
+
+        if (isdigit(exp[i]))
+        { // case when there is an operand: get the whole operand, create OperandNode and push it on the operand stack
             string operand = "";
-            while (i < exp.size() && isdigit(exp[i])) {
+            while (i < exp.size() && isdigit(exp[i]))
+            {
                 operand += exp[i];
                 i++;
             }
@@ -93,35 +113,46 @@ Node* createExpTree(const string& exp) {
         }
 
         // case when there is an opening paranthesis: push it on the operator stack
-        if (exp[i] == '(') {
+        if (exp[i] == '(')
+        {
             operatorSt.push(exp[i]);
             continue;
         }
 
         // case when there is a closing paranthesis: get all the operators until opening parenthesis found, make the expression subtrees, push onto the operantStack
-        if (exp[i] == ')') {
-            while (!operatorSt.empty() && operatorSt.top() != '(') {
-                Node* right = operandSt.top(); operandSt.pop();
-                Node* left = operandSt.top(); operandSt.pop();
-                char op = operatorSt.top(); operatorSt.pop();
+        if (exp[i] == ')')
+        {
+            while (!operatorSt.empty() && operatorSt.top() != '(')
+            {
+                Node *right = operandSt.top();
+                operandSt.pop();
+                Node *left = operandSt.top();
+                operandSt.pop();
+                char op = operatorSt.top();
+                operatorSt.pop();
 
-                Node* newNode = new OperatorNode(string(1, op));
+                Node *newNode = new OperatorNode(string(1, op));
                 newNode->left = left;
                 newNode->right = right;
                 operandSt.push(newNode);
             }
-            operatorSt.pop();  // Pop the '('
+            operatorSt.pop(); // Pop the '('
             continue;
         }
 
         // Handle operators (+, -, *, /)
-        if (exp[i] == '+' || exp[i] == '-' || exp[i] == '*' || exp[i] == '/') {
-            while (!operatorSt.empty() && getPrecedence(exp[i]) <= getPrecedence(operatorSt.top())) { //case when higher/equal precedence op is on top of stack
-                Node* right = operandSt.top(); operandSt.pop();
-                Node* left = operandSt.top(); operandSt.pop();
-                char op = operatorSt.top(); operatorSt.pop();
+        if (exp[i] == '+' || exp[i] == '-' || exp[i] == '*' || exp[i] == '/')
+        {
+            while (!operatorSt.empty() && getPrecedence(exp[i]) <= getPrecedence(operatorSt.top()))
+            { // case when higher/equal precedence op is on top of stack
+                Node *right = operandSt.top();
+                operandSt.pop();
+                Node *left = operandSt.top();
+                operandSt.pop();
+                char op = operatorSt.top();
+                operatorSt.pop();
 
-                Node* newNode = new OperatorNode(string(1, op));
+                Node *newNode = new OperatorNode(string(1, op));
                 newNode->left = left;
                 newNode->right = right;
                 operandSt.push(newNode);
@@ -130,12 +161,16 @@ Node* createExpTree(const string& exp) {
         }
     }
 
-    while (!operatorSt.empty()) { //to handle the remaining operators in the op stack
-        Node* right = operandSt.top(); operandSt.pop();
-        Node* left = operandSt.top(); operandSt.pop();
-        char op = operatorSt.top(); operatorSt.pop();
+    while (!operatorSt.empty())
+    { // to handle the remaining operators in the op stack
+        Node *right = operandSt.top();
+        operandSt.pop();
+        Node *left = operandSt.top();
+        operandSt.pop();
+        char op = operatorSt.top();
+        operatorSt.pop();
 
-        Node* newNode = new OperatorNode(string(1, op));
+        Node *newNode = new OperatorNode(string(1, op));
         newNode->left = left;
         newNode->right = right;
         operandSt.push(newNode);
@@ -144,11 +179,12 @@ Node* createExpTree(const string& exp) {
     return operandSt.top();
 }
 
-int main() {
+int main()
+{
     string exp;
     cout << "ENTER INPUT: ";
     getline(cin, exp);
-    Node* root = createExpTree(exp);
+    Node *root = createExpTree(exp);
     cout << "The result of the expression is: " << root->evaluate() << endl;
     return 0;
 }
